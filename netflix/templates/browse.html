@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - StreamScale</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="browse-body">
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-left">
+            <h1 class="netflix-logo sm">STREAMSCALE</h1>
+            <ul class="nav-links">
+                <li><a href="#" class="active">Home</a></li>
+                <li><a href="#">TV Shows</a></li>
+                <li><a href="#">Movies</a></li>
+                <li><a href="#">New & Popular</a></li>
+                <li><a href="#">My List</a></li>
+            </ul>
+        </div>
+        <div class="nav-right">
+            <i class="fas fa-search"></i>
+            <i class="fas fa-bell"></i>
+            <div class="profile-avatar-sm" style="background-color: #e50914;"></div>
+            <i class="fas fa-caret-down"></i>
+        </div>
+    </nav>
+
+    <!-- Hero Video Background -->
+    <div class="hero-container">
+        <div class="hero-video-wrapper pointer-events-none">
+            <!-- Autoplay hero video (Blade Runner 2049 trailer) -->
+            <iframe
+                src="https://www.youtube.com/embed/gCcx85zbxz4?autoplay=1&mute=1&controls=0&loop=1&playlist=gCcx85zbxz4&modestbranding=1&rel=0&showinfo=0"
+                frameborder="0" allow="autoplay; encrypted-media" allowfullscreen class="hero-video"></iframe>
+        </div>
+        <div class="hero-vignette"></div>
+        <div class="hero-content">
+            <h1 class="hero-title">Blade Runner 2049</h1>
+            <p class="hero-description">Young Blade Runner K's discovery of a long-buried secret leads him to track down
+                former Blade Runner Rick Deckard, who's been missing for thirty years.</p>
+            <div class="hero-buttons">
+                <button class="btn btn-play" onclick="openPlayer('gCcx85zbxz4')"><i class="fas fa-play"></i>
+                    Play</button>
+                <button class="btn btn-more"><i class="fas fa-info-circle"></i> More Info</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rows -->
+    <div class="sliders-container">
+        {% for category, items in categories.items() %}
+        <div class="slider-row">
+            <h2 class="row-header">{{ category }}</h2>
+            <div class="row-container">
+                <button class="handle left-handle"><i class="fas fa-chevron-left"></i></button>
+                <div class="slider">
+                    {% for movie in items %}
+                    <div class="movie-card" onclick="openPlayer('{{ movie.youtube_id }}')">
+                        <img src="{{ movie.thumbnail }}" alt="{{ movie.title }}" loading="lazy">
+                        <div class="movie-card-info">
+                            <div class="movie-card-buttons">
+                                <i class="fas fa-play-circle playback-btn"></i>
+                                <i class="fas fa-plus-circle add-btn"></i>
+                            </div>
+                            <span class="movie-title">{{ movie.title }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="handle right-handle"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Video Modal -->
+    <div id="video-modal" class="modal-overlay" onclick="closePlayer(event)">
+        <div class="modal-content">
+            <button class="close-modal" aria-label="Close Player" onclick="forceClosePlayer()"><i
+                    class="fas fa-times"></i></button>
+            <div class="video-wrapper">
+                <iframe id="youtube-player" src="" frameborder="0" allow="autoplay; encrypted-media"
+                    allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>

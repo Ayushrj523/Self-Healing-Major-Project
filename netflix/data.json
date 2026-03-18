@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "title": "Blade Runner 2049",
+    "thumbnail": "https://img.youtube.com/vi/gCcx85zbxz4/maxresdefault.jpg",
+    "youtube_id": "gCcx85zbxz4",
+    "description": "Young Blade Runner K's discovery of a long-buried secret leads him to track down former Blade Runner Rick Deckard.",
+    "category": "Sci-Fi & Cyberpunk"
+  },
+  {
+    "id": 2,
+    "title": "The Matrix",
+    "thumbnail": "https://img.youtube.com/vi/vKQi3bBA1y8/maxresdefault.jpg",
+    "youtube_id": "vKQi3bBA1y8",
+    "description": "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.",
+    "category": "Sci-Fi & Cyberpunk"
+  },
+  {
+    "id": 3,
+    "title": "TRON: Legacy",
+    "thumbnail": "https://img.youtube.com/vi/L9szn1QQfas/maxresdefault.jpg",
+    "youtube_id": "L9szn1QQfas",
+    "description": "The son of a virtual world designer goes looking for his father and ends up inside the digital world that his father designed.",
+    "category": "Sci-Fi & Cyberpunk"
+  },
+  {
+    "id": 4,
+    "title": "Dune",
+    "thumbnail": "https://img.youtube.com/vi/n9xhJrPXop4/maxresdefault.jpg",
+    "youtube_id": "n9xhJrPXop4",
+    "description": "Feature adaptation of Frank Herbert's science fiction novel, about the son of a noble family entrusted with the protection of the most valuable asset and most vital element in the galaxy.",
+    "category": "Trending Now"
+  },
+  {
+    "id": 5,
+    "title": "Dune: Part Two",
+    "thumbnail": "https://img.youtube.com/vi/Way9Dexny3w/hqdefault.jpg",
+    "youtube_id": "Way9Dexny3w",
+    "description": "Paul Atreides unites with Chani and the Fremen while acting on a warpath of revenge against the conspirators who destroyed his family.",
+    "category": "Trending Now"
+  },
+  {
+    "id": 6,
+    "title": "Cyberpunk: Edgerunners",
+    "thumbnail": "https://img.youtube.com/vi/JtqIImkGcXI/maxresdefault.jpg",
+    "youtube_id": "JtqIImkGcXI",
+    "description": "A Street Kid trying to survive in a technology and body modification-obsessed city of the future. Having everything to lose, he chooses to stay alive by becoming an Edgerunner.",
+    "category": "Sci-Fi & Cyberpunk"
+  },
+  {
+    "id": 7,
+    "title": "Interstellar",
+    "thumbnail": "https://img.youtube.com/vi/zSWdZVtXT7E/maxresdefault.jpg",
+    "youtube_id": "zSWdZVtXT7E",
+    "description": "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
+    "category": "Top Picks for You"
+  },
+  {
+    "id": 8,
+    "title": "Inception",
+    "thumbnail": "https://img.youtube.com/vi/YoHD9XEInc0/maxresdefault.jpg",
+    "youtube_id": "YoHD9XEInc0",
+    "description": "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
+    "category": "Top Picks for You"
+  },
+  {
+    "id": 9,
+    "title": "Arrival",
+    "thumbnail": "https://img.youtube.com/vi/tFMoCEhmvA4/maxresdefault.jpg",
+    "youtube_id": "tFMoCEhmvA4",
+    "description": "A linguist works with the military to communicate with alien lifeforms after twelve mysterious spacecraft appear around the world.",
+    "category": "Top Picks for You"
+  },
+  {
+    "id": 10,
+    "title": "Ready Player One",
+    "thumbnail": "https://img.youtube.com/vi/cSp1dM2Vj48/maxresdefault.jpg",
+    "youtube_id": "cSp1dM2Vj48",
+    "description": "When the creator of a virtual reality called the OASIS dies, he makes a posthumous challenge to all OASIS users to find his Easter Egg, which will give the finder his fortune and control of his world.",
+    "category": "Sci-Fi & Cyberpunk"
+  },
+  {
+    "id": 11,
+    "title": "Ex Machina",
+    "thumbnail": "https://img.youtube.com/vi/EoQuVnKhxaM/maxresdefault.jpg",
+    "youtube_id": "EoQuVnKhxaM",
+    "description": "A young programmer is selected to participate in a ground-breaking experiment in synthetic intelligence by evaluating the human qualities of a highly advanced humanoid A.I.",
+    "category": "Top Picks for You"
+  },
+  {
+    "id": 12,
+    "title": "Alita: Battle Angel",
+    "thumbnail": "https://img.youtube.com/vi/w7pYhpJaJW8/maxresdefault.jpg",
+    "youtube_id": "w7pYhpJaJW8",
+    "description": "A deactivated cyborg is revived, but cannot remember anything of her past life and goes on a quest to find out who she is.",
+    "category": "Trending Now"
+  },
+  {
+    "id": 13,
+    "title": "Ghost in the Shell",
+    "thumbnail": "https://img.youtube.com/vi/G4VmJcZR0Yg/maxresdefault.jpg",
+    "youtube_id": "G4VmJcZR0Yg",
+    "description": "In the near future, Major Mila Killian is the first of her kind: a human saved from a terrible crash, who is cyber-enhanced to be a perfect soldier devoted to stopping the world's most dangerous criminals.",
+    "category": "Sci-Fi & Cyberpunk"
+  },
+  {
+    "id": 14,
+    "title": "Tenet",
+    "thumbnail": "https://img.youtube.com/vi/LdOM0x0XDMo/maxresdefault.jpg",
+    "youtube_id": "LdOM0x0XDMo",
+    "description": "Armed with only one word, Tenet, and fighting for the survival of the entire world, a Protagonist journeys through a twilight world of international espionage on a mission that will unfold in something beyond real time.",
+    "category": "Trending Now"
+  },
+  {
+    "id": 15,
+    "title": "Gravity",
+    "thumbnail": "https://img.youtube.com/vi/OiTiKOy59o4/maxresdefault.jpg",
+    "youtube_id": "OiTiKOy59o4",
+    "description": "Two astronauts work together to survive after an accident leaves them stranded in space.",
+    "category": "Top Picks for You"
+  }
+]
