@@ -1,0 +1,105 @@
+# ═══════════════════════════════════════════════════════════════
+# SENTINELS v2.0 — Healer Agent RBAC
+# Principle of least privilege: healer can only read pods and
+# patch deployments in netflix/prime namespaces. No secrets,
+# no configmaps, no cluster-wide access.
+# ═══════════════════════════════════════════════════════════════
+
+# ServiceAccount for the healer agent
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: healer-sa
+  namespace: sentinels-system
+  labels:
+    app: healer-agent
+---
+# Role for Netflix namespace — pod operations + deployment patching
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: healer-role-netflix
+  namespace: netflix
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "deployments/scale"]
+  verbs: ["get", "list", "watch", "patch"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list", "watch"]
+---
+# Role for Prime namespace — identical permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: healer-role-prime
+  namespace: prime
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "deployments/scale"]
+  verbs: ["get", "list", "watch", "patch"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list", "watch"]
+---
+# RoleBinding: healer-sa → netflix namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: healer-binding-netflix
+  namespace: netflix
+subjects:
+- kind: ServiceAccount
+  name: healer-sa
+  namespace: sentinels-system
+roleRef:
+  kind: Role
+  name: healer-role-netflix
+  apiGroup: rbac.authorization.k8s.io
+---
+# RoleBinding: healer-sa → prime namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: healer-binding-prime
+  namespace: prime
+subjects:
+- kind: ServiceAccount
+  name: healer-sa
+  namespace: sentinels-system
+roleRef:
+  kind: Role
+  name: healer-role-prime
+  apiGroup: rbac.authorization.k8s.io
+---
+# ClusterRole for healer — read-only cluster-wide pod/node info
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: healer-cluster-reader
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: healer-cluster-reader-binding
+subjects:
+- kind: ServiceAccount
+  name: healer-sa
+  namespace: sentinels-system
+roleRef:
+  kind: ClusterRole
+  name: healer-cluster-reader
+  apiGroup: rbac.authorization.k8s.io

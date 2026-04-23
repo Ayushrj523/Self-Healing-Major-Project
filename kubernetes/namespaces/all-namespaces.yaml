@@ -1,0 +1,53 @@
+# ═══════════════════════════════════════════════════════════════
+# SENTINELS v2.0 — All Kubernetes Namespaces
+# ═══════════════════════════════════════════════════════════════
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: netflix
+  labels:
+    app.kubernetes.io/part-of: sentinels
+    purpose: application
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prime
+  labels:
+    app.kubernetes.io/part-of: sentinels
+    purpose: application
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    app.kubernetes.io/part-of: sentinels
+    purpose: observability
+    kubernetes.io/metadata.name: monitoring
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sentinels-system
+  labels:
+    app.kubernetes.io/part-of: sentinels
+    purpose: core-engine
+    kubernetes.io/metadata.name: sentinels-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: chaos
+  labels:
+    app.kubernetes.io/part-of: sentinels
+    purpose: chaos-engineering
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dashboard
+  labels:
+    app.kubernetes.io/part-of: sentinels
+    purpose: command-center
+    kubernetes.io/metadata.name: dashboard

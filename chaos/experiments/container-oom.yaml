@@ -1,0 +1,26 @@
+# ═══════════════════════════════════════════════════════════════
+# SENTINELS v2.0 — Chaos Mesh: Container OOM Experiment
+# Forces OOM kill on target container via memory stress exceeding limits
+# ═══════════════════════════════════════════════════════════════
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: container-oom-netflix
+  namespace: chaos-testing
+  labels:
+    app.kubernetes.io/part-of: sentinels
+    experiment-type: container-oom
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - netflix
+    labelSelectors:
+      app: search-service
+  stressors:
+    memory:
+      workers: 2
+      size: "512Mi"
+  containerNames:
+    - search-service
+  duration: "30s"

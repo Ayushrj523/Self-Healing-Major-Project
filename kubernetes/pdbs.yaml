@@ -1,0 +1,66 @@
+# ═══════════════════════════════════════════════════════════════
+# Pod Disruption Budgets — Ensures minimum availability during chaos
+# ═══════════════════════════════════════════════════════════════
+
+# Netflix Gateway — always keep at least 1 running
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-gateway-pdb
+  namespace: netflix
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+---
+# Netflix User Service
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: user-service-pdb
+  namespace: netflix
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: user-service
+---
+# Netflix Content Service
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: content-service-pdb
+  namespace: netflix
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: content-service
+---
+# Netflix Streaming Service
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: streaming-service-pdb
+  namespace: netflix
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: streaming-service
+---
+# Netflix Frontend
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: netflix-frontend-pdb
+  namespace: netflix
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: netflix-frontend
+---
+# Prime Backend — NO PDB! Monolith is intentionally vulnerable
+# This is a design choice to demonstrate why microservices are more resilient

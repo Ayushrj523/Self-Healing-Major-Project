@@ -1,0 +1,106 @@
+# ═══════════════════════════════════════════════════════════════
+# SENTINELS — PrometheusRules for alerting
+# ═══════════════════════════════════════════════════════════════
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: sentinels-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+  - name: sentinels.pod.alerts
+    rules:
+    # Pod restart > 3 times in 10 minutes
+    - alert: HighPodRestartRate
+      expr: |
+        increase(kube_pod_container_status_restarts_total[10m]) > 3
+      for: 2m
+      labels:
+        severity: warning
+        team: sentinels
+      annotations:
+        summary: "Pod {{ $labels.pod }} restarting frequently"
+        description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has restarted {{ $value }} times in the last 10 minutes."
+
+    # Pod not ready for > 5 minutes
+    - alert: PodNotReady
+      expr: |
+        kube_pod_status_ready{condition="true"} == 0
+      for: 5m
+      labels:
+        severity: critical
+        team: sentinels
+      annotations:
+        summary: "Pod {{ $labels.pod }} not ready"
+        description: "Pod {{ $labels.pod }} in {{ $labels.namespace }} has been not ready for over 5 minutes."
+
+  - name: sentinels.service.alerts
+    rules:
+    # High error rate (> 5% 5xx responses)
+    - alert: HighErrorRate
+      expr: |
+        (sum(rate(http_requests_total{status_code=~"5.."}[5m])) by (service))
+        / (sum(rate(http_requests_total[5m])) by (service)) > 0.05
+      for: 3m
+      labels:
+        severity: warning
+        team: sentinels
+      annotations:
+        summary: "High error rate on {{ $labels.service }}"
+        description: "{{ $labels.service }} is returning >5% 5xx errors."
+
+    # High latency (p99 > 2 seconds)
+    - alert: HighLatency
+      expr: |
+        histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)) > 2
+      for: 5m
+      labels:
+        severity: warning
+        team: sentinels
+      annotations:
+        summary: "High latency on {{ $labels.service }}"
+        description: "p99 latency for {{ $labels.service }} exceeds 2 seconds."
+
+    # Service completely down
+    - alert: ServiceDown
+      expr: |
+        up{job=~".*service.*"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        team: sentinels
+      annotations:
+        summary: "Service {{ $labels.job }} is down"
+        description: "{{ $labels.job }} has been unreachable for over 1 minute. Healer should auto-remediate."
+
+  - name: sentinels.infra.alerts
+    rules:
+    # Node memory > 85%
+    - alert: HighNodeMemory
+      expr: |
+        (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.85
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Node {{ $labels.instance }} memory usage > 85%"
+
+    # Redis connection failures
+    - alert: RedisDown
+      expr: redis_up == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Redis is down"
+
+    # PostgreSQL connection failures
+    - alert: PostgresDown
+      expr: pg_up == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "PostgreSQL is down"

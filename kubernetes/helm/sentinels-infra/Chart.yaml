@@ -1,0 +1,6 @@
+apiVersion: v2
+name: sentinels-infra
+description: SENTINELS v2.0 — Infrastructure Helm Chart (Postgres, Redis, Prometheus, Grafana)
+type: application
+version: 1.0.0
+appVersion: "2.0.0"

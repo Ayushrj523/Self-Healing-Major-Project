@@ -1,0 +1,45 @@
+# ═══════════════════════════════════════════════════════════════
+# Redis — Deployment + Service
+# ═══════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: monitoring
+  labels:
+    app: redis
+spec:
+  replicas: {{ .Values.redis.replicas }}
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: {{ .Values.redis.image }}
+        ports:
+        - containerPort: {{ .Values.redis.port }}
+        command: ["redis-server"]
+        args:
+        - "--maxmemory"
+        - {{ .Values.redis.maxMemory | quote }}
+        - "--maxmemory-policy"
+        - {{ .Values.redis.evictionPolicy }}
+        resources:
+          {{- toYaml .Values.redis.resources | nindent 10 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: monitoring
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: {{ .Values.redis.port }}
+    targetPort: {{ .Values.redis.port }}

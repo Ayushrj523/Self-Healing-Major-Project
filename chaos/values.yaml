@@ -1,0 +1,53 @@
+# ═══════════════════════════════════════════════════════════════
+# SENTINELS v2.0 — Chaos Mesh Helm Chart Values
+# Install: helm install chaos-mesh chaos-mesh/chaos-mesh -f chaos/values.yaml -n chaos-testing
+# ═══════════════════════════════════════════════════════════════
+
+controllerManager:
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+chaosDaemon:
+  runtime: containerd
+  socketPath: /run/containerd/containerd.sock
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+dashboard:
+  create: true
+  securityMode: false
+  service:
+    type: ClusterIP
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+dnsServer:
+  create: true
+
+# Scope to specific namespaces only — safety first
+controllerManager:
+  targetNamespace: "netflix,prime"
+
+# Security: prevent chaos in system namespaces
+webhook:
+  certs:
+    auto:
+      enabled: true
+  failurePolicy: Fail
+  timeoutSeconds: 5

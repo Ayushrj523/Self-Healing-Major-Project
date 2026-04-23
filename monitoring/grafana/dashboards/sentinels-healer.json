@@ -1,0 +1,93 @@
+{
+  "annotations": { "list": [] },
+  "description": "SENTINELS Healer Agent Performance Dashboard",
+  "editable": true,
+  "panels": [
+    {
+      "title": "Healing Actions per Minute",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(healing_actions_total[5m])) * 60",
+          "legendFormat": "Actions/min"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "title": "F1 Score",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "sentinels_f1_score", "legendFormat": "F1" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit", "min": 0, "max": 1,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "green", "value": 0.9 }] }
+        }
+      }
+    },
+    {
+      "title": "MTTR (seconds)",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        { "expr": "sentinels_mttr_seconds", "legendFormat": "MTTR" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s", "min": 0, "max": 60,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 15 }, { "color": "red", "value": 30 }] }
+        }
+      }
+    },
+    {
+      "title": "Healing Duration Distribution",
+      "type": "histogram",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "healing_action_duration_seconds_bucket", "legendFormat": "{{action}}" }
+      ]
+    },
+    {
+      "title": "Anomaly Score Distribution",
+      "type": "histogram",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "anomaly_scores_bucket", "legendFormat": "scores" }
+      ]
+    },
+    {
+      "title": "Healing by Namespace",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+      "targets": [
+        { "expr": "sum(healing_actions_total) by (namespace)", "legendFormat": "{{namespace}}" }
+      ]
+    },
+    {
+      "title": "Safety Stack Blocks",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+      "targets": [
+        { "expr": "sum(healing_actions_total{result=\"blocked\"})", "legendFormat": "Blocked" },
+        { "expr": "sum(healing_actions_total{result=\"filtered\"})", "legendFormat": "Filtered" }
+      ]
+    },
+    {
+      "title": "Model Training Status",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+      "targets": [
+        { "expr": "model_trained", "legendFormat": "Trained" }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["sentinels", "healer"],
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "SENTINELS Healer Performance",
+  "uid": "sentinels-healer-perf"
+}

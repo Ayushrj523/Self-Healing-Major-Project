@@ -1,0 +1,98 @@
+# ═══════════════════════════════════════════════════════════════
+# PrimeOS — K8s Deployment (Monolith: single pod = single point of failure)
+# Namespace: prime
+# ═══════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prime-backend
+  namespace: prime
+  labels:
+    app: prime-backend
+    architecture: monolith
+spec:
+  replicas: 1  # INTENTIONALLY 1 — demonstrates monolith fragility
+  selector:
+    matchLabels:
+      app: prime-backend
+  template:
+    metadata:
+      labels:
+        app: prime-backend
+        architecture: monolith
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8020"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: prime-backend
+        image: sentinels/prime-backend:latest
+        ports:
+        - containerPort: 8020
+        resources:
+          requests: { cpu: "100m", memory: "256Mi" }
+          limits: { cpu: "500m", memory: "512Mi" }
+        readinessProbe:
+          httpGet: { path: /health, port: 8020 }
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet: { path: /health, port: 8020 }
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prime-backend
+  namespace: prime
+spec:
+  selector:
+    app: prime-backend
+  ports:
+  - port: 8020
+    targetPort: 8020
+---
+# ──── Prime Frontend ──────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prime-frontend
+  namespace: prime
+  labels:
+    app: prime-frontend
+    architecture: monolith
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prime-frontend
+  template:
+    metadata:
+      labels:
+        app: prime-frontend
+        architecture: monolith
+    spec:
+      containers:
+      - name: frontend
+        image: sentinels/prime-frontend:latest
+        ports:
+        - containerPort: 3002
+        resources:
+          requests: { cpu: "30m", memory: "64Mi" }
+          limits: { cpu: "100m", memory: "128Mi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prime-frontend
+  namespace: prime
+spec:
+  type: NodePort
+  selector:
+    app: prime-frontend
+  ports:
+  - port: 3002
+    targetPort: 3002
+    nodePort: 30002

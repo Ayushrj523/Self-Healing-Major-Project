@@ -1,0 +1,64 @@
+# ═══════════════════════════════════════════════════════════════
+# SENTINELS v2.0 — Chaos Mesh: Cascading Failure Experiment
+# Kills multiple pods in sequence to trigger cascading failure
+# ═══════════════════════════════════════════════════════════════
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Workflow
+metadata:
+  name: cascading-failure-netflix
+  namespace: chaos-testing
+  labels:
+    app.kubernetes.io/part-of: sentinels
+    experiment-type: cascading-failure
+spec:
+  entry: cascading-entry
+  templates:
+    - name: cascading-entry
+      templateType: Serial
+      deadline: "5m"
+      children:
+        - kill-gateway
+        - wait-10s
+        - kill-user-service
+        - wait-10s
+        - kill-content-service
+
+    - name: kill-gateway
+      templateType: PodChaos
+      deadline: "30s"
+      podChaos:
+        action: pod-kill
+        mode: all
+        selector:
+          namespaces:
+            - netflix
+          labelSelectors:
+            app: api-gateway
+
+    - name: kill-user-service
+      templateType: PodChaos
+      deadline: "30s"
+      podChaos:
+        action: pod-kill
+        mode: all
+        selector:
+          namespaces:
+            - netflix
+          labelSelectors:
+            app: user-service
+
+    - name: kill-content-service
+      templateType: PodChaos
+      deadline: "30s"
+      podChaos:
+        action: pod-kill
+        mode: all
+        selector:
+          namespaces:
+            - netflix
+          labelSelectors:
+            app: content-service
+
+    - name: wait-10s
+      templateType: Suspend
+      deadline: "10s"

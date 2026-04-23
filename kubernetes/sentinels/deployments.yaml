@@ -1,0 +1,386 @@
+# SENTINELS v2.0 — Core System K8s Deployments
+# Namespace: sentinels-system
+# Services: healer-agent (5000), metrics-aggregator (5050), opa (8181)
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sentinels-system
+  labels:
+    app.kubernetes.io/part-of: sentinels
+    monitoring: enabled
+
+---
+# ═══════════════════════════════════════════════════════════
+# HEALER AGENT — The Brain (Port 5000)
+# ═══════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healer-agent
+  namespace: sentinels-system
+  labels:
+    app: healer-agent
+    component: core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: healer-agent
+  template:
+    metadata:
+      labels:
+        app: healer-agent
+        component: core
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: sentinels-healer
+      containers:
+        - name: healer
+          image: sentinels/healer-agent:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+              name: http
+          env:
+            - name: REDIS_URL
+              value: "redis://redis.sentinels-system.svc:6379/3"
+            - name: OPA_URL
+              value: "http://opa-server.sentinels-system.svc:8181"
+            - name: PROMETHEUS_URL
+              value: "http://prometheus-server.monitoring.svc:9090"
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: healer-agent
+  namespace: sentinels-system
+  labels:
+    app: healer-agent
+spec:
+  selector:
+    app: healer-agent
+  ports:
+    - port: 5000
+      targetPort: 5000
+      name: http
+
+---
+# RBAC — Healer needs K8s API access
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sentinels-healer
+  namespace: sentinels-system
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: sentinels-healer-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "nodes"]
+    verbs: ["get", "list", "watch", "delete", "patch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+  - apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
+    verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: sentinels-healer-binding
+subjects:
+  - kind: ServiceAccount
+    name: sentinels-healer
+    namespace: sentinels-system
+roleRef:
+  kind: ClusterRole
+  name: sentinels-healer-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# ═══════════════════════════════════════════════════════════
+# METRICS AGGREGATOR (Port 5050)
+# ═══════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-aggregator
+  namespace: sentinels-system
+  labels:
+    app: metrics-aggregator
+    component: metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metrics-aggregator
+  template:
+    metadata:
+      labels:
+        app: metrics-aggregator
+        component: metrics
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5050"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: aggregator
+          image: sentinels/metrics-aggregator:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5050
+              name: http
+          env:
+            - name: HEALER_URL
+              value: "http://healer-agent.sentinels-system.svc:5000"
+            - name: PROMETHEUS_URL
+              value: "http://prometheus-server.monitoring.svc:9090"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5050
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5050
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-aggregator
+  namespace: sentinels-system
+  labels:
+    app: metrics-aggregator
+spec:
+  selector:
+    app: metrics-aggregator
+  ports:
+    - port: 5050
+      targetPort: 5050
+      name: http
+
+---
+# ═══════════════════════════════════════════════════════════
+# OPA SERVER (Port 8181)
+# ═══════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opa-server
+  namespace: sentinels-system
+  labels:
+    app: opa-server
+    component: policy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opa-server
+  template:
+    metadata:
+      labels:
+        app: opa-server
+        component: policy
+    spec:
+      containers:
+        - name: opa
+          image: openpolicyagent/opa:0.64.1-static
+          args:
+            - "run"
+            - "--server"
+            - "--addr=0.0.0.0:8181"
+            - "--log-level=info"
+            - "/policies"
+          ports:
+            - containerPort: 8181
+              name: http
+          volumeMounts:
+            - name: policies
+              mountPath: /policies
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 150m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8181
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health?bundles
+              port: 8181
+            initialDelaySeconds: 3
+            periodSeconds: 10
+      volumes:
+        - name: policies
+          configMap:
+            name: opa-policies
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opa-server
+  namespace: sentinels-system
+  labels:
+    app: opa-server
+spec:
+  selector:
+    app: opa-server
+  ports:
+    - port: 8181
+      targetPort: 8181
+      name: http
+
+---
+# OPA Policy ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opa-policies
+  namespace: sentinels-system
+data:
+  healing.rego: |
+    package sentinels.healing
+    import rego.v1
+    default action := "observe"
+    default cooldown_seconds := 120
+    action := "restart_pod" if {
+        input.anomaly_type == "high_cpu"
+        input.severity == "critical"
+        input.anomaly_score < -0.30
+    }
+    action := "restart_pod" if {
+        input.anomaly_type == "high_memory"
+        input.severity == "critical"
+    }
+    action := "rollback" if {
+        input.anomaly_type == "crash_loop"
+        input.severity == "critical"
+        input.restart_count > 5
+    }
+    action := "restart_pod" if {
+        input.anomaly_type == "crash_loop"
+        input.severity == "critical"
+        input.restart_count <= 5
+    }
+    action := "scale_up" if {
+        input.anomaly_type == "traffic_spike"
+    }
+    action := "restart_pod" if {
+        input.anomaly_type == "high_error_rate"
+        input.severity == "critical"
+    }
+    action := "observe" if {
+        input.healthy_ratio < 0.50
+    }
+    cooldown_seconds := 300 if {
+        input.namespace == "prime"
+    }
+
+---
+# ═══════════════════════════════════════════════════════════
+# DASHBOARD (Port 3000)
+# ═══════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentinels-dashboard
+  namespace: sentinels-system
+  labels:
+    app: sentinels-dashboard
+    component: ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sentinels-dashboard
+  template:
+    metadata:
+      labels:
+        app: sentinels-dashboard
+        component: ui
+    spec:
+      containers:
+        - name: dashboard
+          image: sentinels/dashboard:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 150m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sentinels-dashboard
+  namespace: sentinels-system
+  labels:
+    app: sentinels-dashboard
+spec:
+  selector:
+    app: sentinels-dashboard
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: http

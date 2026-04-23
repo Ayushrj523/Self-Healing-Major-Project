@@ -1,0 +1,24 @@
+# ═══════════════════════════════════════════════════════════════
+# SENTINELS v2.0 — Chaos Mesh: Pod Kill Experiment
+# Randomly kills pods in the netflix namespace to test self-healing
+# ═══════════════════════════════════════════════════════════════
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: pod-kill-netflix
+  namespace: chaos-testing
+  labels:
+    app.kubernetes.io/part-of: sentinels
+    experiment-type: pod-kill
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces:
+      - netflix
+    labelSelectors:
+      app.kubernetes.io/part-of: netflix-clone
+  gracePeriod: 0
+  duration: "30s"
+  scheduler:
+    cron: "@every 2m"

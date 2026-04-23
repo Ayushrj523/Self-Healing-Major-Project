@@ -1,0 +1,239 @@
+# ═══════════════════════════════════════════════════════════════
+# SENTINELS v2.0 — Local Development Docker Compose
+# Usage: docker-compose -f docker-compose.dev.yml up -d
+# ═══════════════════════════════════════════════════════════════
+
+services:
+  # ── Shared Infrastructure ─────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: sentinels-postgres
+    environment:
+      POSTGRES_USER: sentinels
+      POSTGRES_PASSWORD: sentinels123
+      POSTGRES_DB: sentinels_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinels"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: sentinels-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── Netflix Microservices ─────────────────────────────────────
+  netflix-user-service:
+    build: ./apps/netflix/user-service
+    container_name: netflix-user-service
+    ports:
+      - "8002:8002"
+    environment:
+      DATABASE_URL: postgresql://sentinels:sentinels123@postgres:5432/netflix_db
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: sentinels-jwt-secret-change-in-production-2024
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  netflix-content-service:
+    build: ./apps/netflix/content-service
+    container_name: netflix-content-service
+    ports:
+      - "8003:8003"
+    environment:
+      DATABASE_URL: postgresql://sentinels:sentinels123@postgres:5432/netflix_db
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  netflix-search-service:
+    build: ./apps/netflix/search-service
+    container_name: netflix-search-service
+    ports:
+      - "8005:8005"
+    environment:
+      CONTENT_SERVICE_URL: http://netflix-content-service:8003
+    restart: unless-stopped
+
+  netflix-streaming-service:
+    build: ./apps/netflix/streaming-service
+    container_name: netflix-streaming-service
+    ports:
+      - "8004:8004"
+    environment:
+      REDIS_URL: redis://redis:6379/1
+      CONTENT_SERVICE_URL: http://netflix-content-service:8003
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  netflix-recommendation-service:
+    build: ./apps/netflix/recommendation-service
+    container_name: netflix-recommendation-service
+    ports:
+      - "8006:8006"
+    environment:
+      REDIS_URL: redis://redis:6379/2
+      CONTENT_SERVICE_URL: http://netflix-content-service:8003
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  netflix-payment-service:
+    build: ./apps/netflix/payment-service
+    container_name: netflix-payment-service
+    ports:
+      - "8007:8007"
+    environment:
+      DATABASE_URL: postgresql://sentinels:sentinels123@postgres:5432/netflix_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  netflix-notification-service:
+    build: ./apps/netflix/notification-service
+    container_name: netflix-notification-service
+    ports:
+      - "8008:8008"
+    environment:
+      DATABASE_URL: postgresql://sentinels:sentinels123@postgres:5432/netflix_db
+      REDIS_URL: redis://redis:6379/3
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  netflix-api-gateway:
+    build: ./apps/netflix/api-gateway
+    container_name: netflix-api-gateway
+    ports:
+      - "8001:8001"
+    environment:
+      USER_SERVICE_URL: http://netflix-user-service:8002
+      CONTENT_SERVICE_URL: http://netflix-content-service:8003
+      STREAMING_SERVICE_URL: http://netflix-streaming-service:8004
+      SEARCH_SERVICE_URL: http://netflix-search-service:8005
+      RECOMMENDATION_SERVICE_URL: http://netflix-recommendation-service:8006
+      PAYMENT_SERVICE_URL: http://netflix-payment-service:8007
+      NOTIFICATION_SERVICE_URL: http://netflix-notification-service:8008
+      JWT_SECRET: sentinels-jwt-secret-change-in-production-2024
+    depends_on:
+      - netflix-user-service
+      - netflix-content-service
+    restart: unless-stopped
+
+  netflix-frontend:
+    build: ./apps/netflix/frontend
+    container_name: netflix-frontend
+    ports:
+      - "3001:3001"
+    depends_on:
+      - netflix-api-gateway
+    restart: unless-stopped
+
+  # ── PrimeOS Monolith ──────────────────────────────────────────
+  prime-backend:
+    build: ./apps/prime/backend
+    container_name: prime-backend
+    ports:
+      - "8020:8020"
+    environment:
+      DATABASE_URL: postgresql://sentinels:sentinels123@postgres:5432/prime_db
+      REDIS_URL: redis://redis:6379/4
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  prime-frontend:
+    build: ./apps/prime/frontend
+    container_name: prime-frontend
+    ports:
+      - "3002:3002"
+    depends_on:
+      - prime-backend
+    restart: unless-stopped
+
+  # ── SENTINELS Core ────────────────────────────────────────────
+  healer-agent:
+    build: ./apps/sentinels/healer
+    container_name: healer-agent
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: postgresql://sentinels:sentinels123@postgres:5432/sentinels_db
+      REDIS_URL: redis://redis:6379/5
+      OPA_URL: http://opa-server:8181
+      PROMETHEUS_URL: http://prometheus:9090
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  metrics-aggregator:
+    build: ./apps/sentinels/metrics-aggregator
+    container_name: metrics-aggregator
+    ports:
+      - "5050:5050"
+    environment:
+      DATABASE_URL: postgresql://sentinels:sentinels123@postgres:5432/sentinels_db
+      PROMETHEUS_URL: http://prometheus:9090
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  opa-server:
+    image: openpolicyagent/opa:0.65.0
+    container_name: opa-server
+    ports:
+      - "8181:8181"
+    command: run --server --log-level info /policies
+    volumes:
+      - ./apps/sentinels/opa/policies:/policies
+    restart: unless-stopped
+
+  # ── Dashboard ─────────────────────────────────────────────────
+  dashboard-backend:
+    build: ./dashboard/backend
+    container_name: dashboard-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - healer-agent
+      - metrics-aggregator
+    restart: unless-stopped
+
+  dashboard-frontend:
+    build: ./dashboard/frontend
+    container_name: dashboard-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - dashboard-backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

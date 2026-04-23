@@ -1,0 +1,26 @@
+# ═══════════════════════════════════════════════════════════════
+# SENTINELS v2.0 — Chaos Mesh: Network Latency Experiment
+# Adds 200ms latency with 25ms jitter to Netflix service traffic
+# ═══════════════════════════════════════════════════════════════
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-latency-netflix
+  namespace: chaos-testing
+  labels:
+    app.kubernetes.io/part-of: sentinels
+    experiment-type: network-latency
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - netflix
+    labelSelectors:
+      app.kubernetes.io/part-of: netflix-clone
+  delay:
+    latency: "200ms"
+    jitter: "25ms"
+    correlation: "50"
+  direction: to
+  duration: "90s"

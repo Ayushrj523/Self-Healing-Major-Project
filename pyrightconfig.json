@@ -1,0 +1,62 @@
+{
+  "reportMissingModuleSource": "warning",
+  "reportMissingImports": "warning",
+  "pythonVersion": "3.12",
+  "executionEnvironments": [
+    {
+      "root": "apps/sentinels/healer",
+      "venv": ".venv",
+      "venvPath": "apps/sentinels/healer"
+    },
+    {
+      "root": "apps/sentinels/metrics-aggregator",
+      "venv": ".venv",
+      "venvPath": "apps/sentinels/metrics-aggregator"
+    },
+    {
+      "root": "apps/netflix/api-gateway",
+      "venv": ".venv",
+      "venvPath": "apps/netflix/api-gateway"
+    },
+    {
+      "root": "apps/netflix/user-service",
+      "venv": ".venv",
+      "venvPath": "apps/netflix/user-service"
+    },
+    {
+      "root": "apps/netflix/content-service",
+      "venv": ".venv",
+      "venvPath": "apps/netflix/content-service"
+    },
+    {
+      "root": "apps/netflix/search-service",
+      "venv": ".venv",
+      "venvPath": "apps/netflix/search-service"
+    },
+    {
+      "root": "apps/netflix/streaming-service",
+      "venv": ".venv",
+      "venvPath": "apps/netflix/streaming-service"
+    },
+    {
+      "root": "apps/netflix/recommendation-service",
+      "venv": ".venv",
+      "venvPath": "apps/netflix/recommendation-service"
+    },
+    {
+      "root": "apps/netflix/payment-service",
+      "venv": ".venv",
+      "venvPath": "apps/netflix/payment-service"
+    },
+    {
+      "root": "apps/netflix/notification-service",
+      "venv": ".venv",
+      "venvPath": "apps/netflix/notification-service"
+    },
+    {
+      "root": "apps/prime/backend",
+      "venv": ".venv",
+      "venvPath": "apps/prime/backend"
+    }
+  ]
+}

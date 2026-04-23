@@ -1,0 +1,507 @@
+# ═══════════════════════════════════════════════════════════════
+# Netflix Microservices — K8s Deployments + Services
+# Namespace: netflix
+# ═══════════════════════════════════════════════════════════════
+
+# ──── User Service ────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: netflix
+  labels:
+    app: user-service
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8002"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: user-service
+        image: sentinels/netflix-user-service:latest
+        ports:
+        - containerPort: 8002
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: netflix-db-secret
+              key: database-url
+        - name: REDIS_URL
+          value: "redis://redis.monitoring.svc.cluster.local:6379/0"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: netflix-jwt-secret
+              key: jwt-secret
+        resources:
+          requests: { cpu: "50m", memory: "128Mi" }
+          limits: { cpu: "200m", memory: "256Mi" }
+        readinessProbe:
+          httpGet: { path: /health, port: 8002 }
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet: { path: /health, port: 8002 }
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: netflix
+spec:
+  selector:
+    app: user-service
+  ports:
+  - port: 8002
+    targetPort: 8002
+---
+# ──── Content Service ─────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: content-service
+  namespace: netflix
+  labels:
+    app: content-service
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: content-service
+  template:
+    metadata:
+      labels:
+        app: content-service
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8003"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: content-service
+        image: sentinels/netflix-content-service:latest
+        ports:
+        - containerPort: 8003
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: netflix-db-secret
+              key: database-url
+        resources:
+          requests: { cpu: "50m", memory: "128Mi" }
+          limits: { cpu: "200m", memory: "256Mi" }
+        readinessProbe:
+          httpGet: { path: /health, port: 8003 }
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet: { path: /health, port: 8003 }
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: content-service
+  namespace: netflix
+spec:
+  selector:
+    app: content-service
+  ports:
+  - port: 8003
+    targetPort: 8003
+---
+# ──── Search Service ──────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: search-service
+  namespace: netflix
+  labels:
+    app: search-service
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: search-service
+  template:
+    metadata:
+      labels:
+        app: search-service
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8005"
+    spec:
+      containers:
+      - name: search-service
+        image: sentinels/netflix-search-service:latest
+        ports:
+        - containerPort: 8005
+        env:
+        - name: CONTENT_SERVICE_URL
+          value: "http://content-service.netflix.svc.cluster.local:8003"
+        resources:
+          requests: { cpu: "50m", memory: "96Mi" }
+          limits: { cpu: "150m", memory: "192Mi" }
+        readinessProbe:
+          httpGet: { path: /health, port: 8005 }
+          initialDelaySeconds: 15
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: search-service
+  namespace: netflix
+spec:
+  selector:
+    app: search-service
+  ports:
+  - port: 8005
+    targetPort: 8005
+---
+# ──── Streaming Service ───────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming-service
+  namespace: netflix
+  labels:
+    app: streaming-service
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: streaming-service
+  template:
+    metadata:
+      labels:
+        app: streaming-service
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8004"
+    spec:
+      containers:
+      - name: streaming-service
+        image: sentinels/netflix-streaming-service:latest
+        ports:
+        - containerPort: 8004
+        env:
+        - name: REDIS_URL
+          value: "redis://redis.monitoring.svc.cluster.local:6379/1"
+        - name: CONTENT_SERVICE_URL
+          value: "http://content-service.netflix.svc.cluster.local:8003"
+        resources:
+          requests: { cpu: "50m", memory: "128Mi" }
+          limits: { cpu: "200m", memory: "256Mi" }
+        readinessProbe:
+          httpGet: { path: /health, port: 8004 }
+          initialDelaySeconds: 10
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: streaming-service
+  namespace: netflix
+spec:
+  selector:
+    app: streaming-service
+  ports:
+  - port: 8004
+    targetPort: 8004
+---
+# ──── Recommendation Service ──────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation-service
+  namespace: netflix
+  labels:
+    app: recommendation-service
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendation-service
+  template:
+    metadata:
+      labels:
+        app: recommendation-service
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8006"
+    spec:
+      containers:
+      - name: recommendation-service
+        image: sentinels/netflix-recommendation-service:latest
+        ports:
+        - containerPort: 8006
+        env:
+        - name: REDIS_URL
+          value: "redis://redis.monitoring.svc.cluster.local:6379/2"
+        - name: CONTENT_SERVICE_URL
+          value: "http://content-service.netflix.svc.cluster.local:8003"
+        resources:
+          requests: { cpu: "50m", memory: "96Mi" }
+          limits: { cpu: "150m", memory: "192Mi" }
+        readinessProbe:
+          httpGet: { path: /health, port: 8006 }
+          initialDelaySeconds: 15
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: recommendation-service
+  namespace: netflix
+spec:
+  selector:
+    app: recommendation-service
+  ports:
+  - port: 8006
+    targetPort: 8006
+---
+# ──── Payment Service ─────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: netflix
+  labels:
+    app: payment-service
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8007"
+    spec:
+      containers:
+      - name: payment-service
+        image: sentinels/netflix-payment-service:latest
+        ports:
+        - containerPort: 8007
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: netflix-db-secret
+              key: database-url
+        resources:
+          requests: { cpu: "30m", memory: "96Mi" }
+          limits: { cpu: "100m", memory: "192Mi" }
+        readinessProbe:
+          httpGet: { path: /health, port: 8007 }
+          initialDelaySeconds: 10
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: netflix
+spec:
+  selector:
+    app: payment-service
+  ports:
+  - port: 8007
+    targetPort: 8007
+---
+# ──── Notification Service ────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: netflix
+  labels:
+    app: notification-service
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8008"
+    spec:
+      containers:
+      - name: notification-service
+        image: sentinels/netflix-notification-service:latest
+        ports:
+        - containerPort: 8008
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: netflix-db-secret
+              key: database-url
+        resources:
+          requests: { cpu: "30m", memory: "96Mi" }
+          limits: { cpu: "100m", memory: "192Mi" }
+        readinessProbe:
+          httpGet: { path: /health, port: 8008 }
+          initialDelaySeconds: 10
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: netflix
+spec:
+  selector:
+    app: notification-service
+  ports:
+  - port: 8008
+    targetPort: 8008
+---
+# ──── API Gateway ─────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: netflix
+  labels:
+    app: api-gateway
+    tier: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+        tier: frontend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8001"
+    spec:
+      containers:
+      - name: api-gateway
+        image: sentinels/netflix-api-gateway:latest
+        ports:
+        - containerPort: 8001
+        env:
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: netflix-jwt-secret
+              key: jwt-secret
+        - name: USER_SERVICE_URL
+          value: "http://user-service.netflix.svc.cluster.local:8002"
+        - name: CONTENT_SERVICE_URL
+          value: "http://content-service.netflix.svc.cluster.local:8003"
+        - name: STREAMING_SERVICE_URL
+          value: "http://streaming-service.netflix.svc.cluster.local:8004"
+        - name: SEARCH_SERVICE_URL
+          value: "http://search-service.netflix.svc.cluster.local:8005"
+        - name: RECOMMENDATION_SERVICE_URL
+          value: "http://recommendation-service.netflix.svc.cluster.local:8006"
+        - name: PAYMENT_SERVICE_URL
+          value: "http://payment-service.netflix.svc.cluster.local:8007"
+        - name: NOTIFICATION_SERVICE_URL
+          value: "http://notification-service.netflix.svc.cluster.local:8008"
+        resources:
+          requests: { cpu: "50m", memory: "128Mi" }
+          limits: { cpu: "200m", memory: "256Mi" }
+        readinessProbe:
+          httpGet: { path: /health, port: 8001 }
+          initialDelaySeconds: 10
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: netflix
+spec:
+  type: NodePort
+  selector:
+    app: api-gateway
+  ports:
+  - port: 8001
+    targetPort: 8001
+    nodePort: 30001
+---
+# ──── Netflix Frontend ────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netflix-frontend
+  namespace: netflix
+  labels:
+    app: netflix-frontend
+    tier: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: netflix-frontend
+  template:
+    metadata:
+      labels:
+        app: netflix-frontend
+        tier: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: sentinels/netflix-frontend:latest
+        ports:
+        - containerPort: 3001
+        resources:
+          requests: { cpu: "30m", memory: "64Mi" }
+          limits: { cpu: "100m", memory: "128Mi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netflix-frontend
+  namespace: netflix
+spec:
+  type: NodePort
+  selector:
+    app: netflix-frontend
+  ports:
+  - port: 3001
+    targetPort: 3001
+    nodePort: 30000

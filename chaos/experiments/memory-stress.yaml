@@ -1,0 +1,24 @@
+# ═══════════════════════════════════════════════════════════════
+# SENTINELS v2.0 — Chaos Mesh: Memory Stress Experiment
+# Allocates 256Mi of memory on target pods for 60 seconds
+# ═══════════════════════════════════════════════════════════════
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: memory-stress-netflix
+  namespace: chaos-testing
+  labels:
+    app.kubernetes.io/part-of: sentinels
+    experiment-type: memory-stress
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - netflix
+    labelSelectors:
+      app.kubernetes.io/part-of: netflix-clone
+  stressors:
+    memory:
+      workers: 1
+      size: "256Mi"
+  duration: "60s"

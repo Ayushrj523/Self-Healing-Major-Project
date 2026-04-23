@@ -1,0 +1,54 @@
+# ═══════════════════════════════════════════════════════════════
+# SENTINELS v2.0 — Infrastructure Values
+# ═══════════════════════════════════════════════════════════════
+
+postgres:
+  image: postgres:16-alpine
+  replicas: 1
+  port: 5432
+  credentials:
+    user: sentinels
+    password: sentinels123
+  databases:
+    - netflix_db
+    - prime_db
+    - sentinels_db
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  storage:
+    size: 2Gi
+    className: local-path
+
+redis:
+  image: redis:7-alpine
+  replicas: 1
+  port: 6379
+  maxMemory: "256mb"
+  evictionPolicy: allkeys-lru
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "128Mi"
+    limits:
+      cpu: "200m"
+      memory: "300Mi"
+
+prometheus:
+  enabled: true
+  retention: 7d
+  scrapeInterval: 15s
+  serviceMonitor:
+    enabled: true
+
+grafana:
+  enabled: true
+  adminPassword: sentinels-admin
+  dashboards:
+    - sentinels-overview
+    - netflix-services
+    - prime-monolith

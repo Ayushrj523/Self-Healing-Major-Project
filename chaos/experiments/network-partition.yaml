@@ -1,0 +1,29 @@
+# ═══════════════════════════════════════════════════════════════
+# SENTINELS v2.0 — Chaos Mesh: Network Partition Experiment
+# Isolates api-gateway from all backend services
+# ═══════════════════════════════════════════════════════════════
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-partition-gateway
+  namespace: chaos-testing
+  labels:
+    app.kubernetes.io/part-of: sentinels
+    experiment-type: network-partition
+spec:
+  action: partition
+  mode: all
+  selector:
+    namespaces:
+      - netflix
+    labelSelectors:
+      app: api-gateway
+  direction: both
+  target:
+    selector:
+      namespaces:
+        - netflix
+      labelSelectors:
+        app.kubernetes.io/part-of: netflix-clone
+    mode: all
+  duration: "45s"
