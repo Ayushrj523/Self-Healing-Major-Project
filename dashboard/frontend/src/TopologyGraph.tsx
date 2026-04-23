@@ -146,7 +146,7 @@ function DataFlowParticle({ from, to, speed, delay }: {
       from[1] + (to[1] - from[1]) * t + Math.sin(t * Math.PI) * 0.08,
       from[2] + (to[2] - from[2]) * t,
     );
-    ref.current.material.opacity = Math.sin(t * Math.PI) * 0.6;
+    (ref.current.material as THREE.Material).opacity = Math.sin(t * Math.PI) * 0.6;
   });
 
   return (
