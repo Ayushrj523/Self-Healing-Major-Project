@@ -25,6 +25,7 @@ interface HealingEvent {
 }
 
 interface Scores {
+  is_real?: boolean;
   f1_score: number;
   mttd_seconds: number;
   mttr_seconds: number;
@@ -110,27 +111,27 @@ function ScoreCard({ scores }: { scores: Scores }) {
       <div className="card-body">
         <div className="scores-grid">
           <div className="score-item green">
-            <div className="value">{(scores?.f1_score !== undefined ? scores.f1_score * 100 : 0).toFixed(1)}%</div>
+            <div className="value">{scores?.is_real ? `${(scores.f1_score !== undefined ? scores.f1_score * 100 : 0).toFixed(1)}%` : 'Collecting...'}</div>
             <div className="label">F1 Score</div>
           </div>
           <div className="score-item blue">
-            <div className="value">{scores?.mttr_seconds?.toFixed(1) ?? '0.0'}s</div>
+            <div className="value">{scores?.is_real ? `${scores.mttr_seconds?.toFixed(1) ?? '0.0'}s` : 'Collecting...'}</div>
             <div className="label">MTTR</div>
           </div>
           <div className="score-item">
-            <div className="value">{scores?.mttd_seconds?.toFixed(0) ?? '0'}s</div>
+            <div className="value">{scores?.is_real ? `${scores.mttd_seconds?.toFixed(0) ?? '0'}s` : 'Collecting...'}</div>
             <div className="label">MTTD</div>
           </div>
           <div className="score-item green">
-            <div className="value">{(scores?.recovery_rate !== undefined ? scores.recovery_rate * 100 : 0).toFixed(1)}%</div>
+            <div className="value">{scores?.is_real ? `${(scores.recovery_rate !== undefined ? scores.recovery_rate * 100 : 0).toFixed(1)}%` : 'Collecting...'}</div>
             <div className="label">Recovery Rate</div>
           </div>
           <div className="score-item red">
-            <div className="value">{(scores?.false_positive_rate !== undefined ? scores.false_positive_rate * 100 : 0).toFixed(1)}%</div>
+            <div className="value">{scores?.is_real ? `${(scores.false_positive_rate !== undefined ? scores.false_positive_rate * 100 : 0).toFixed(1)}%` : 'Collecting...'}</div>
             <div className="label">False Positive</div>
           </div>
           <div className="score-item yellow">
-            <div className="value">{scores?.total_healing_actions ?? 0}</div>
+            <div className="value">{scores?.is_real ? (scores?.total_healing_actions ?? 0) : 'Collecting...'}</div>
             <div className="label">Total Heals</div>
           </div>
         </div>

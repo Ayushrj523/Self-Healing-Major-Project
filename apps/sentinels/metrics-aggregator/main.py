@@ -148,26 +148,27 @@ async def _compute_scores():
                 return
             events = resp.json()
     except Exception as e:
-        logger.warning(f"Cannot reach healer: {e} — using cached scores")
-        # Generate realistic demo scores if healer unreachable
+        logger.warning(f"Cannot reach healer: {e} — waiting for real data")
+        # No healer connection — show zeros, dashboard will display "Collecting..."
         _scores.update({
-            "f1_score": 0.937,
-            "precision": 0.951,
-            "recall": 0.923,
-            "mttd_seconds": 91.0,
-            "mttr_seconds": 14.2,
-            "false_positive_rate": 0.048,
-            "recovery_rate": 0.973,
-            "total_alerts": 150,
-            "true_positives": 120,
-            "false_positives": 6,
-            "true_negatives": 19,
-            "false_negatives": 5,
-            "total_healing_actions": 126,
-            "successful_heals": 123,
-            "failed_heals": 3,
-            "blocked_heals": 8,
-            "avg_anomaly_score": -0.42,
+            "is_real": False,
+            "f1_score": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "mttd_seconds": 0.0,
+            "mttr_seconds": 0.0,
+            "false_positive_rate": 0.0,
+            "recovery_rate": 0.0,
+            "total_alerts": 0,
+            "true_positives": 0,
+            "false_positives": 0,
+            "true_negatives": 0,
+            "false_negatives": 0,
+            "total_healing_actions": 0,
+            "successful_heals": 0,
+            "failed_heals": 0,
+            "blocked_heals": 0,
+            "avg_anomaly_score": 0.0,
             "last_updated": datetime.utcnow().isoformat(),
             "uptime_seconds": time.time() - _start_time,
         })
@@ -175,6 +176,31 @@ async def _compute_scores():
         return
 
     if not events:
+        _scores.update({
+            "is_real": True,
+            "f1_score": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "mttd_seconds": 0.0,
+            "mttr_seconds": 0.0,
+            "false_positive_rate": 0.0,
+            "recovery_rate": 0.0,
+            "total_alerts": 0,
+            "true_positives": 0,
+            "false_positives": 0,
+            "true_negatives": 0,
+            "false_negatives": 0,
+            "total_healing_actions": 0,
+            "successful_heals": 0,
+            "failed_heals": 0,
+            "blocked_heals": 0,
+            "avg_anomaly_score": 0.0,
+            "last_updated": datetime.utcnow().isoformat(),
+            "uptime_seconds": time.time() - _start_time,
+            "healing_by_type": {},
+            "healing_by_namespace": {},
+        })
+        _update_gauges()
         return
 
     # Classify events
@@ -230,7 +256,8 @@ async def _compute_scores():
         by_type[at] = by_type.get(at, 0) + 1
         by_ns[ns] = by_ns.get(ns, 0) + 1
 
-    _scores = {
+    _scores.update({
+        "is_real": True,
         "f1_score": round(f1, 4),
         "precision": round(precision, 4),
         "recall": round(recall, 4),
@@ -252,7 +279,7 @@ async def _compute_scores():
         "uptime_seconds": round(time.time() - _start_time, 0),
         "healing_by_type": by_type,
         "healing_by_namespace": by_ns,
-    }
+    })
 
     _update_gauges()
     logger.info(f"Scores updated: F1={f1:.3f} MTTD={mttd:.1f}s MTTR={mttr:.1f}s "

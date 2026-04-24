@@ -200,6 +200,7 @@ services:
       - "5050:5050"
     environment:
       DATABASE_URL: postgresql://sentinels:sentinels123@postgres:5432/sentinels_db
+      HEALER_URL: http://healer-agent:5000
       PROMETHEUS_URL: http://prometheus:9090
     depends_on:
       postgres:

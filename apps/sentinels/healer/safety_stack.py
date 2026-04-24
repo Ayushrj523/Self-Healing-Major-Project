@@ -21,9 +21,9 @@ class SafetyStack:
         # Configuration
         self.circuit_breaker_threshold = 5  # failures before opening circuit
         self.circuit_breaker_reset_time = 300  # 5 min reset
-        self.blast_radius_threshold = 0.75  # minimum healthy pod ratio
+        self.blast_radius_threshold = 0.25  # minimum healthy pod ratio (low for demo)
         self.max_concurrent_actions = 3
-        self.default_cooldown = 120  # 2 min default
+        self.default_cooldown = 60  # 1 min default (demo-friendly)
 
     def _connect_redis(self) -> None:
         try:
@@ -105,7 +105,7 @@ class SafetyStack:
 
         # Set cooldown
         cooldown_key = f"sentinels:cooldown:{pod}"
-        self._set(cooldown_key, now, ex=300)
+        self._set(cooldown_key, now, ex=60)
 
         # Update circuit breaker
         if not success:

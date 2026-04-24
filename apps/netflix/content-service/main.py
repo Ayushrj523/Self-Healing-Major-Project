@@ -68,6 +68,68 @@ async def metrics_middleware(request: Request, call_next):
     return response
 
 # ─── Lifespan ─────────────────────────────────────────────────
+SEED_MOVIES = [
+    # ACTION (10)
+    {"title": "Big Buck Bunny", "genre": "Action", "youtube_id": "YE7VzlLtp-4", "rating": 8.1, "year": 2008},
+    {"title": "Elephants Dream", "genre": "Action", "youtube_id": "TLkA0RELQ1g", "rating": 7.5, "year": 2006},
+    {"title": "Cosmos Laundromat", "genre": "Action", "youtube_id": "Y-rmzh0PI3c", "rating": 8.3, "year": 2015},
+    {"title": "Sintel", "genre": "Action", "youtube_id": "eRsGyueVLvQ", "rating": 8.0, "year": 2010},
+    {"title": "Tears of Steel", "genre": "Action", "youtube_id": "R6MlUcmOul8", "rating": 7.2, "year": 2012},
+    {"title": "Glass Half", "genre": "Action", "youtube_id": "fn3KWM1kuAw", "rating": 7.8, "year": 2020},
+    {"title": "The Daily Dweebs", "genre": "Action", "youtube_id": "35iEgjHkKSE", "rating": 7.0, "year": 2017},
+    {"title": "Caminandes: Llama Drama", "genre": "Action", "youtube_id": "SkVqJ1SGeL0", "rating": 7.9, "year": 2013},
+    {"title": "Agent 327", "genre": "Action", "youtube_id": "mN0zPOpADL4", "rating": 8.2, "year": 2017},
+    {"title": "Sprite Fright", "genre": "Action", "youtube_id": "Y-rmzh0PI3c", "rating": 8.0, "year": 2021},
+
+    # DRAMA (10)
+    {"title": "Winged Migration", "genre": "Drama", "youtube_id": "4MzDBk8tFZU", "rating": 8.4, "year": 2001},
+    {"title": "Meridian", "genre": "Drama", "youtube_id": "R6MlUcmOul8", "rating": 7.6, "year": 2019},
+    {"title": "Charge", "genre": "Drama", "youtube_id": "eRsGyueVLvQ", "rating": 7.3, "year": 2020},
+    {"title": "Heist", "genre": "Drama", "youtube_id": "TLkA0RELQ1g", "rating": 7.8, "year": 2022},
+    {"title": "The White Helmets", "genre": "Drama", "youtube_id": "fn3KWM1kuAw", "rating": 8.5, "year": 2016},
+    {"title": "Paperman", "genre": "Drama", "youtube_id": "4mW9FE5ILJs", "rating": 8.6, "year": 2012},
+    {"title": "Float", "genre": "Drama", "youtube_id": "35iEgjHkKSE", "rating": 7.4, "year": 2019},
+    {"title": "Piper", "genre": "Drama", "youtube_id": "SkVqJ1SGeL0", "rating": 8.7, "year": 2016},
+    {"title": "Lou", "genre": "Drama", "youtube_id": "mN0zPOpADL4", "rating": 8.1, "year": 2017},
+    {"title": "Lava", "genre": "Drama", "youtube_id": "YE7VzlLtp-4", "rating": 7.9, "year": 2014},
+
+    # COMEDY (10)
+    {"title": "For the Birds", "genre": "Comedy", "youtube_id": "4MzDBk8tFZU", "rating": 8.3, "year": 2000},
+    {"title": "Geri's Game", "genre": "Comedy", "youtube_id": "4mW9FE5ILJs", "rating": 8.4, "year": 1997},
+    {"title": "One Man Band", "genre": "Comedy", "youtube_id": "fn3KWM1kuAw", "rating": 7.7, "year": 2005},
+    {"title": "Presto", "genre": "Comedy", "youtube_id": "35iEgjHkKSE", "rating": 8.5, "year": 2008},
+    {"title": "Dug's Special Mission", "genre": "Comedy", "youtube_id": "SkVqJ1SGeL0", "rating": 7.8, "year": 2009},
+    {"title": "Day & Night", "genre": "Comedy", "youtube_id": "Y-rmzh0PI3c", "rating": 8.0, "year": 2010},
+    {"title": "La Luna", "genre": "Comedy", "youtube_id": "mN0zPOpADL4", "rating": 8.1, "year": 2011},
+    {"title": "The Blue Umbrella", "genre": "Comedy", "youtube_id": "TLkA0RELQ1g", "rating": 7.9, "year": 2013},
+    {"title": "Sanjay's Super Team", "genre": "Comedy", "youtube_id": "eRsGyueVLvQ", "rating": 8.0, "year": 2015},
+    {"title": "Bao", "genre": "Comedy", "youtube_id": "R6MlUcmOul8", "rating": 8.2, "year": 2018},
+
+    # DOCUMENTARY (10)
+    {"title": "Home (Yann Arthus-Bertrand)", "genre": "Documentary", "youtube_id": "jqxENMKaeCU", "rating": 8.6, "year": 2009},
+    {"title": "Samsara Trailer", "genre": "Documentary", "youtube_id": "TLkA0RELQ1g", "rating": 8.5, "year": 2011},
+    {"title": "Baraka Clips", "genre": "Documentary", "youtube_id": "4MzDBk8tFZU", "rating": 8.5, "year": 1992},
+    {"title": "NASA Earth Views", "genre": "Documentary", "youtube_id": "fn3KWM1kuAw", "rating": 8.4, "year": 2020},
+    {"title": "Planet Earth Highlights", "genre": "Documentary", "youtube_id": "35iEgjHkKSE", "rating": 9.0, "year": 2006},
+    {"title": "Deep Blue Highlights", "genre": "Documentary", "youtube_id": "SkVqJ1SGeL0", "rating": 8.3, "year": 2003},
+    {"title": "The Ocean Agency", "genre": "Documentary", "youtube_id": "mN0zPOpADL4", "rating": 8.1, "year": 2019},
+    {"title": "SpaceX Launch", "genre": "Documentary", "youtube_id": "Y-rmzh0PI3c", "rating": 8.7, "year": 2021},
+    {"title": "ISS Earth Time-lapse", "genre": "Documentary", "youtube_id": "eRsGyueVLvQ", "rating": 8.8, "year": 2022},
+    {"title": "Hubble IMAX", "genre": "Documentary", "youtube_id": "R6MlUcmOul8", "rating": 8.9, "year": 2010},
+
+    # SCI-FI (10)
+    {"title": "Wanderers", "genre": "Sci-Fi", "youtube_id": "YH3c1QZzRK4", "rating": 9.0, "year": 2014},
+    {"title": "Dust Sci-Fi Shorts", "genre": "Sci-Fi", "youtube_id": "4mW9FE5ILJs", "rating": 8.2, "year": 2018},
+    {"title": "Rise of the Machines", "genre": "Sci-Fi", "youtube_id": "jqxENMKaeCU", "rating": 7.8, "year": 2020},
+    {"title": "First Steps on Mars", "genre": "Sci-Fi", "youtube_id": "TLkA0RELQ1g", "rating": 8.4, "year": 2021},
+    {"title": "Blade Runner Shorts", "genre": "Sci-Fi", "youtube_id": "4MzDBk8tFZU", "rating": 8.1, "year": 2017},
+    {"title": "Orbital Mechanics", "genre": "Sci-Fi", "youtube_id": "fn3KWM1kuAw", "rating": 8.0, "year": 2019},
+    {"title": "Neural Interface", "genre": "Sci-Fi", "youtube_id": "35iEgjHkKSE", "rating": 7.9, "year": 2022},
+    {"title": "Gravity Waves", "genre": "Sci-Fi", "youtube_id": "SkVqJ1SGeL0", "rating": 8.3, "year": 2020},
+    {"title": "Quantum Leap Short", "genre": "Sci-Fi", "youtube_id": "mN0zPOpADL4", "rating": 8.5, "year": 2021},
+    {"title": "The Last Algorithm", "genre": "Sci-Fi", "youtube_id": "Y-rmzh0PI3c", "rating": 8.6, "year": 2023},
+]
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(f"{SERVICE_NAME} starting on port {SERVICE_PORT}")
@@ -86,14 +148,28 @@ async def lifespan(app: FastAPI):
             )
         ''')
         count = await conn.fetchval("SELECT COUNT(*) FROM netflix_content")
+        if count == 0:
+            logger.info("Seeding initial 50 movies...")
+            for m in SEED_MOVIES:
+                await conn.execute(
+                    """INSERT INTO netflix_content (title, description, category, youtube_id, release_year, rating)
+                       VALUES ($1, $2, $3, $4, $5, $6)""",
+                    m["title"], f"{m['title']} description", m["genre"], m["youtube_id"], m["year"], m["rating"]
+                )
+            count = await conn.fetchval("SELECT COUNT(*) FROM netflix_content")
         logger.info(f"Content catalog loaded: {count} movies")
     yield
     if db_pool:
         await db_pool.close()
 
 app = FastAPI(title="NetflixOS Content Service", version="2.0.0", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"], allow_credentials=True,
-    allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.middleware("http")(metrics_middleware)
 app.mount("/metrics", make_asgi_app())
 
@@ -144,15 +220,21 @@ async def browse_content(category: Optional[str] = None):
             return [ContentBrowseResponse(category=cat, items=items, total=len(items))
                     for cat, items in grouped.items()]
 
-@app.get("/content/{content_id}", response_model=ContentItem)
-async def get_content(content_id: int):
+@app.get("/content/featured")
+async def featured_content():
+    """Returns top 10 highest-rated movies for the hero section."""
     pool = await get_pool()
     async with pool.acquire() as conn:
-        r = await conn.fetchrow("SELECT * FROM netflix_content WHERE id = $1", content_id)
-    if not r:
-        raise HTTPException(status_code=404, detail="Content not found")
-    CONTENT_SERVED.labels(service=SERVICE_NAME).inc()
-    return row_to_content(r)
+        rows = await conn.fetch("SELECT * FROM netflix_content ORDER BY rating DESC LIMIT 10")
+    return [row_to_content(r) for r in rows]
+
+@app.get("/content/categories")
+async def list_categories():
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT category, COUNT(*) as count FROM netflix_content GROUP BY category ORDER BY category")
+    return [{"category": r["category"], "count": r["count"]} for r in rows]
 
 @app.get("/content/search/internal")
 async def search_content(q: str = Query(..., min_length=1)):
@@ -167,21 +249,15 @@ async def search_content(q: str = Query(..., min_length=1)):
         )
     return [row_to_content(r) for r in rows]
 
-@app.get("/content/categories")
-async def list_categories():
+@app.get("/content/{content_id}", response_model=ContentItem)
+async def get_content(content_id: int):
     pool = await get_pool()
     async with pool.acquire() as conn:
-        rows = await conn.fetch(
-            "SELECT category, COUNT(*) as count FROM netflix_content GROUP BY category ORDER BY category")
-    return [{"category": r["category"], "count": r["count"]} for r in rows]
-
-@app.get("/content/featured")
-async def featured_content():
-    """Returns top 10 highest-rated movies for the hero section."""
-    pool = await get_pool()
-    async with pool.acquire() as conn:
-        rows = await conn.fetch("SELECT * FROM netflix_content ORDER BY rating DESC LIMIT 10")
-    return [row_to_content(r) for r in rows]
+        r = await conn.fetchrow("SELECT * FROM netflix_content WHERE id = $1", content_id)
+    if not r:
+        raise HTTPException(status_code=404, detail="Content not found")
+    CONTENT_SERVED.labels(service=SERVICE_NAME).inc()
+    return row_to_content(r)
 
 if __name__ == "__main__":
     import uvicorn

@@ -99,7 +99,7 @@ function Navbar({ user, onLogout, onSearch }: { user: User | null; onLogout: () 
           onChange={e => { setQuery(e.target.value); if (e.target.value.length > 1) onSearch(e.target.value); }}
           onBlur={() => { if (!query) setSearchOpen(false); }}
         />
-        <button onClick={() => setSearchOpen(!searchOpen)} style={{ color: 'white', fontSize: '1.2rem' }}>🔍</button>
+        <button onClick={() => setSearchOpen(!searchOpen)} style={{ color: 'white', fontSize: '1.2rem' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
         {user && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: '0.85rem', color: '#aaa' }}>{user.display_name}</span>
@@ -122,8 +122,8 @@ function Hero({ item, onPlay }: { item: ContentItem; onPlay: () => void }) {
         <h1 className="hero-title">{item.title}</h1>
         <p className="hero-description">{item.description}</p>
         <div className="hero-actions">
-          <button className="btn btn-play" onClick={onPlay}>▶ Play</button>
-          <button className="btn btn-info">ℹ More Info</button>
+          <button className="btn btn-play" onClick={onPlay}><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Play</button>
+          <button className="btn btn-info"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> More Info</button>
         </div>
       </div>
     </div>
@@ -165,6 +165,19 @@ function LoginPage({ onLogin }: { onLogin: (token: string, user: User) => void }
   );
 }
 
+// ─── Error Screen ─────────────────────────────────────────────
+function ErrorScreen({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  return (
+    <div className="error-screen" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'white', backgroundColor: '#141414' }}>
+      <h2 style={{ marginBottom: '1rem' }}>Oops, something went wrong.</h2>
+      <p style={{ color: '#aaa', marginBottom: '2rem' }}>{message}</p>
+      {onRetry && (
+        <button onClick={onRetry} className="btn btn-red">Try Again</button>
+      )}
+    </div>
+  );
+}
+
 // ─── Browse Page ────────────────────────────────────────────
 function BrowsePage({ user, onLogout }: { user: User; onLogout: () => void }) {
   const [categories, setCategories] = useState<CategoryGroup[]>([]);
@@ -172,10 +185,12 @@ function BrowsePage({ user, onLogout }: { user: User; onLogout: () => void }) {
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
   const [searchResults, setSearchResults] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       try {
+        setLoading(true);
         const [browseRes, featuredRes] = await Promise.all([
           contentApi.browse(), contentApi.featured()
         ]);
@@ -183,10 +198,13 @@ function BrowsePage({ user, onLogout }: { user: User; onLogout: () => void }) {
         if (featuredRes.data.length > 0) {
           setFeatured(featuredRes.data[Math.floor(Math.random() * Math.min(5, featuredRes.data.length))]);
         }
+        setError(null);
       } catch (err) {
         console.error('Failed to load content:', err);
+        setError('Unable to load content. Please refresh.');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     load();
   }, []);
@@ -200,6 +218,8 @@ function BrowsePage({ user, onLogout }: { user: User; onLogout: () => void }) {
   }, []);
 
   if (loading) return <div className="loading-screen"><div className="spinner" /></div>;
+  if (error) return <ErrorScreen message={error} onRetry={() => window.location.reload()} />;
+  if (categories.length === 0) return <ErrorScreen message="No content available" />;
 
   return (
     <>

@@ -1,0 +1,26 @@
+# ═══════════════════════════════════════════════════════════════
+# Pyrefly Configuration — SENTINELS v2.0
+# These services run inside Docker containers with their own
+# pip-installed dependencies. They are NOT meant to be type-checked
+# against the local Python environment.
+# ═══════════════════════════════════════════════════════════════
+
+# Exclude all Docker-only backend services from analysis
+project-excludes = [
+    "apps/netflix/api-gateway/**",
+    "apps/netflix/user-service/**",
+    "apps/netflix/content-service/**",
+    "apps/netflix/search-service/**",
+    "apps/netflix/streaming-service/**",
+    "apps/netflix/recommendation-service/**",
+    "apps/netflix/payment-service/**",
+    "apps/netflix/notification-service/**",
+    "apps/prime/backend/**",
+    "apps/sentinels/healer/**",
+    "apps/sentinels/metrics-aggregator/**",
+    "dashboard/backend/**",
+]
+
+# Suppress missing-import errors globally (all deps are Docker-only)
+[errors]
+missing-import = false

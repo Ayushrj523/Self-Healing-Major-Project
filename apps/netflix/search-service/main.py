@@ -114,8 +114,13 @@ async def lifespan(app: FastAPI):
     task.cancel()
 
 app = FastAPI(title="NetflixOS Search Service", version="2.0.0", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
-    allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.middleware("http")(metrics_middleware)
 app.mount("/metrics", make_asgi_app())
 

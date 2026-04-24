@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-const api = axios.create({ baseURL: 'http://localhost:8020' });
+const api = axios.create({ baseURL: '' });
 
 interface ContentItem {
   id: number; title: string; description: string; category: string;
@@ -53,7 +53,7 @@ function LoginPage({ onLogin }: { onLogin: (token: string, user: any) => void })
   const [error, setError] = useState('');
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError('');
-    try { const { data } = await api.post('/auth/login', { email, password }); onLogin(data.access_token, data.user); }
+    try { const { data } = await api.post('/api/auth/login', { email, password }); onLogin(data.access_token, data.user); }
     catch (err: any) { setError(err.response?.data?.error || 'Login failed'); }
   };
   return (
@@ -86,7 +86,7 @@ function BrowsePage({ user, onLogout }: { user: any; onLogout: () => void }) {
   useEffect(() => {
     const load = async () => {
       try {
-        const [bRes, fRes] = await Promise.all([api.get('/content/browse'), api.get('/content/featured')]);
+        const [bRes, fRes] = await Promise.all([api.get('/api/content/browse'), api.get('/api/content/featured')]);
         setCategories(bRes.data);
         if (fRes.data.length) setFeatured(fRes.data[0]);
       } catch(e) { console.error(e); }
@@ -119,7 +119,7 @@ function BrowsePage({ user, onLogout }: { user: any; onLogout: () => void }) {
             {featured.is_prime_exclusive ? <span className="prime-hero-badge">PRIME EXCLUSIVE</span> : null}
             <h1 className="prime-hero-title">{featured.title}</h1>
             <p className="prime-hero-desc">{featured.description}</p>
-            <button className="btn-prime" onClick={()=>setSelected(featured)}>▶ Play</button>
+            <button className="btn-prime" onClick={()=>setSelected(featured)}><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{marginRight:6}}><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
           </div>
         </div>
       )}

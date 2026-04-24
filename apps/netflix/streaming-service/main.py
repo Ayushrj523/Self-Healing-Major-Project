@@ -75,8 +75,13 @@ async def lifespan(app: FastAPI):
         await redis_client.close()
 
 app = FastAPI(title="NetflixOS Streaming Service", version="2.0.0", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
-    allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.middleware("http")(metrics_middleware)
 app.mount("/metrics", make_asgi_app())
 
