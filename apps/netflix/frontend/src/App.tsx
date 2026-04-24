@@ -152,7 +152,7 @@ function LoginPage({ onLogin }: { onLogin: (token: string, user: User) => void }
   return (
     <div className="auth-page">
       <form className="auth-form" onSubmit={handleSubmit}>
-        <h1>Sign In</h1>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" alt="Netflix" style={{ height: 45, marginBottom: 20 }} />
         {error && <div style={{ color: '#E50914', marginBottom: 16, fontSize: '0.9rem' }}>{error}</div>}
         <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
         <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />

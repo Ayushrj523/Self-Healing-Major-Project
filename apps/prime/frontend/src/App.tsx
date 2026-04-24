@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-const api = axios.create({ baseURL: '/api' });
+const api = axios.create({ baseURL: 'http://localhost:8020' });
 
 interface ContentItem {
   id: number; title: string; description: string; category: string;
@@ -59,7 +59,7 @@ function LoginPage({ onLogin }: { onLogin: (token: string, user: any) => void })
   return (
     <div className="prime-login">
       <form className="prime-login-form" onSubmit={handleSubmit}>
-        <div style={{color:'#00A8E1',fontWeight:800,fontSize:'1.3rem',marginBottom:8}}>prime</div>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/1/11/Amazon_Prime_Video_logo.svg" alt="Prime Video" style={{ height: 35, marginBottom: 15 }} />
         <h1>Sign In</h1>
         {error && <div style={{color:'#ff4444',marginBottom:12,fontSize:'0.85rem'}}>{error}</div>}
         <input placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />

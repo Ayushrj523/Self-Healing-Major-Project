@@ -1,6 +1,6 @@
 {
-  "reportMissingModuleSource": "warning",
-  "reportMissingImports": "warning",
+  "reportMissingModuleSource": "none",
+  "reportMissingImports": "none",
   "pythonVersion": "3.12",
   "executionEnvironments": [
     {

@@ -1,6 +1,6 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE = '/api';
+const API_BASE = 'http://localhost:8001/api';
 
 const api = axios.create({ baseURL: API_BASE });
 
@@ -10,6 +10,15 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
+
+// Error boundary logging
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('[Netflix API Error]:', error.response || error.message);
+    return Promise.reject(error);
+  }
+);
 
 export interface ContentItem {
   id: number; title: string; description: string; category: string;

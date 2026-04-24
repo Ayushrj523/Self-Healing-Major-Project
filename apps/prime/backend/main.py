@@ -14,18 +14,48 @@ from django.views.decorators.http import require_http_methods
 from django.db import connection
 
 # ─── Django Inline Configuration ─────────────────────────────
+class CorsMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+    def __call__(self, request):
+        from django.http import HttpResponse
+        if request.method == "OPTIONS":
+            response = HttpResponse()
+        else:
+            response = self.get_response(request)
+        response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "*"
+        return response
+
+import urllib.parse
+db_url = os.getenv('DATABASE_URL', '')
+if db_url.startswith('postgresql://'):
+    url = urllib.parse.urlparse(db_url)
+    db_config = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': url.path[1:],
+        'USER': url.username,
+        'PASSWORD': url.password,
+        'HOST': url.hostname,
+        'PORT': url.port or 5432,
+    }
+else:
+    db_config = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(os.path.dirname(__file__), 'prime.db'),
+    }
+
 if not settings.configured:
     settings.configure(
         DEBUG=os.getenv('DEBUG', 'True') == 'True',
         SECRET_KEY=os.getenv('DJANGO_SECRET_KEY', 'sentinels-prime-secret-key-2024'),
         ALLOWED_HOSTS=['*'],
         ROOT_URLCONF=__name__,
-        DATABASES={'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(os.path.dirname(__file__), 'prime.db'),
-        }},
+        DATABASES={'default': db_config},
         INSTALLED_APPS=['django.contrib.contenttypes', 'django.contrib.auth'],
         MIDDLEWARE=[
+            '__main__.CorsMiddleware',
             'django.middleware.common.CommonMiddleware',
         ],
         DEFAULT_AUTO_FIELD='django.db.models.BigAutoField',

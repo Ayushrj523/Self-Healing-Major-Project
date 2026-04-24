@@ -51,7 +51,7 @@ interface PodNode {
 }
 
 // ─── API Layer ──────────────────────────────────────────────
-const api = axios.create({ baseURL: '' });
+const api = axios.create({ baseURL: 'http://localhost:5050' });
 
 async function fetchScores(): Promise<Scores> {
   try {
@@ -69,7 +69,7 @@ async function fetchScores(): Promise<Scores> {
 
 async function fetchHealingLog(): Promise<HealingEvent[]> {
   try {
-    const res = await api.get('/healer/api/healing-log', { params: { limit: 50 } });
+    const res = await axios.get('http://localhost:5000/api/healing-log', { params: { limit: 50 } });
     return Array.isArray(res.data) ? res.data : [];
   } catch {
     return [];
@@ -77,7 +77,7 @@ async function fetchHealingLog(): Promise<HealingEvent[]> {
 }
 
 async function simulateAttack(anomalyType: string, namespace: string, pod: string): Promise<HealingEvent> {
-  const res = await api.post('/healer/api/simulate', {
+  const res = await axios.post('http://localhost:5000/api/simulate', {
     anomaly_type: anomalyType, namespace, pod,
   });
   return res.data;
@@ -110,27 +110,27 @@ function ScoreCard({ scores }: { scores: Scores }) {
       <div className="card-body">
         <div className="scores-grid">
           <div className="score-item green">
-            <div className="value">{(scores.f1_score * 100).toFixed(1)}%</div>
+            <div className="value">{(scores?.f1_score !== undefined ? scores.f1_score * 100 : 0).toFixed(1)}%</div>
             <div className="label">F1 Score</div>
           </div>
           <div className="score-item blue">
-            <div className="value">{scores.mttr_seconds.toFixed(1)}s</div>
+            <div className="value">{scores?.mttr_seconds?.toFixed(1) ?? '0.0'}s</div>
             <div className="label">MTTR</div>
           </div>
           <div className="score-item">
-            <div className="value">{scores.mttd_seconds.toFixed(0)}s</div>
+            <div className="value">{scores?.mttd_seconds?.toFixed(0) ?? '0'}s</div>
             <div className="label">MTTD</div>
           </div>
           <div className="score-item green">
-            <div className="value">{(scores.recovery_rate * 100).toFixed(1)}%</div>
+            <div className="value">{(scores?.recovery_rate !== undefined ? scores.recovery_rate * 100 : 0).toFixed(1)}%</div>
             <div className="label">Recovery Rate</div>
           </div>
           <div className="score-item red">
-            <div className="value">{(scores.false_positive_rate * 100).toFixed(1)}%</div>
+            <div className="value">{(scores?.false_positive_rate !== undefined ? scores.false_positive_rate * 100 : 0).toFixed(1)}%</div>
             <div className="label">False Positive</div>
           </div>
           <div className="score-item yellow">
-            <div className="value">{scores.total_healing_actions}</div>
+            <div className="value">{scores?.total_healing_actions ?? 0}</div>
             <div className="label">Total Heals</div>
           </div>
         </div>
@@ -415,7 +415,7 @@ export default function App() {
             {selectedPod && (
               <button style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#a0a0a0' }}>
                 <MapPin size={12} />
-                {selectedPod.name} ({selectedPod.status}) | CPU: {selectedPod.cpu.toFixed(0)}%
+                {selectedPod.name} ({selectedPod.status}) | CPU: {selectedPod.cpu?.toFixed(0) ?? '0'}%
               </button>
             )}
           </div>
